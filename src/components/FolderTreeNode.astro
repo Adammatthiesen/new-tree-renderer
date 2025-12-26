@@ -315,6 +315,10 @@ const href = node.page === false ? `?folder=${node.id}` : "#";
                         );
                     }
                 };
+
+                transaction.oncomplete = () => {
+                    db.close();
+                };
             });
         }
     }
