@@ -262,24 +262,60 @@ const href = node.page === false ? `?folder=${node.id}` : "#";
             this.saveExpandedState();
         }
 
+        interactWithDB(onsuccess: IDBOpenDBRequest["onsuccess"]) {
+            const result = indexedDB.open("folder-tree-node", 1);
+
+            result.onupgradeneeded = (event) => {
+                const db = (event.target as IDBOpenDBRequest).result;
+                db.createObjectStore("nodes", { keyPath: "id" });
+            };
+
+            result.onsuccess = onsuccess;
+
+            result.onerror = (event) => {
+                console.error(
+                    "IndexedDB error:",
+                    (event.target as IDBOpenDBRequest).error,
+                );
+            };
+        }
+
         saveExpandedState() {
             const nodeId = this.getAttribute("data-node-id");
-            if (nodeId) {
-                localStorage.setItem(
-                    `tree-node-${nodeId}`,
-                    this.isExpanded.toString(),
-                );
-            }
+            if (!nodeId) return;
+            return this.interactWithDB((event) => {
+                const db = (event.target as IDBOpenDBRequest).result;
+                const transaction = db.transaction("nodes", "readwrite");
+                const store = transaction.objectStore("nodes");
+
+                store.put({ id: nodeId, expanded: this.isExpanded });
+
+                transaction.oncomplete = () => {
+                    db.close();
+                };
+            });
         }
 
         loadExpandedState() {
             const nodeId = this.getAttribute("data-node-id");
-            if (nodeId) {
-                const saved = localStorage.getItem(`tree-node-${nodeId}`);
-                if (saved === "true") {
-                    this.expand();
-                }
-            }
+            if (!nodeId) return;
+            return this.interactWithDB((event) => {
+                const db = (event.target as IDBOpenDBRequest).result;
+                const transaction = db.transaction("nodes", "readonly");
+                const store = transaction.objectStore("nodes");
+
+                const getRequest = store.get(nodeId);
+                getRequest.onsuccess = (event) => {
+                    const result = (event.target as IDBRequest).result;
+                    if (result) {
+                        this.isExpanded = result.expanded;
+                        this.setAttribute(
+                            "aria-expanded",
+                            String(this.isExpanded),
+                        );
+                    }
+                };
+            });
         }
     }
 
