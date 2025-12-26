@@ -49,14 +49,6 @@ const href = node.page ? `?edit=${node.id}` : "#";
             <Icon name="heroicons:pencil" width={16} height={16} />
             <span>Edit Page</span>
         </button>
-        <button
-            class="context-menu-item"
-            role="menuitem"
-            data-action="copy-link"
-        >
-            <Icon name="heroicons:link" width={16} height={16} />
-            <span>Copy Link</span>
-        </button>
     </div>
 </folder-tree-leaf>
 
@@ -351,20 +343,6 @@ const href = node.page ? `?edit=${node.id}` : "#";
                     if (href && href !== "#") {
                         const url = new URL(href, window.location.origin);
                         window.location.href = url.href;
-                    }
-                    break;
-                case "copy-link":
-                    if (href && href !== "#") {
-                        const fullUrl = new URL(href, window.location.origin)
-                            .href;
-                        navigator.clipboard
-                            .writeText(fullUrl)
-                            .then(() => {
-                                console.log("Link copied to clipboard!");
-                            })
-                            .catch((err) => {
-                                console.error("Failed to copy link:", err);
-                            });
                     }
                     break;
             }
