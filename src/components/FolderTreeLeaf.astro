@@ -1,12 +1,9 @@
 ---
 import { Icon } from "studiocms:ui/components/icon";
 import type { AvailableIcons } from "studiocms:ui/icons";
-import type { FolderNode } from "../types";
+import type { NodeLeafProps } from "./shared";
 
-interface Props {
-    node: FolderNode;
-    depth?: number;
-}
+interface Props extends NodeLeafProps {}
 
 const { node, depth = 0 } = Astro.props;
 
@@ -58,7 +55,7 @@ const href = node.page ? `?edit=${node.id}` : "#";
         align-items: center;
         gap: 0.5rem;
         padding: 0.375rem 0.5rem;
-        padding-left: 1.25rem;
+        padding-left: 1.15rem;
         border-radius: var(--radius-md);
         transition:
             background-color 0.15s ease,

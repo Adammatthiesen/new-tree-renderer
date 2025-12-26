@@ -1,31 +1,11 @@
 ---
-import type { FolderNode } from "../types";
-import FolderTreeNode from "./FolderTreeNode.astro";
-import FolderTreeLeaf from "./FolderTreeLeaf.astro";
 import { Icon } from "studiocms:ui/components/icon";
+import FolderTreeNodeTree from "./FolderTreeNodeTree.astro";
+import type { TreeProps } from "./shared";
 
-interface Props {
-    data: FolderNode[];
-    depth?: number;
-}
+interface Props extends TreeProps {}
 
-const { data, depth = 0 } = Astro.props;
-
-/**
- * Recursively sorts a tree of pages and folders by name (A to Z).
- * @param data - The array of folders and pages to sort.
- * @returns A new array with the sorted structure.
- */
-function sortTree(data: FolderNode[]): FolderNode[] {
-    return data
-        .map((node) => ({
-            ...node,
-            children: sortTree(node.children),
-        }))
-        .sort((a, b) => a.name.localeCompare(b.name));
-}
-
-const sortedData = sortTree(data);
+const props = Astro.props;
 
 const containerId = `folder-tree-${crypto.randomUUID()}`;
 const menuId = `${containerId}-menu`;
@@ -36,19 +16,7 @@ const menuId = `${containerId}-menu`;
     data-container-id={containerId}
     data-menu-id={menuId}
 >
-    {
-        sortedData.map((node) =>
-            node.page ? (
-                <FolderTreeLeaf node={node} depth={depth} />
-            ) : (
-                <FolderTreeNode node={node} depth={depth}>
-                    {node.children && node.children.length > 0 && (
-                        <Astro.self data={node.children} depth={depth + 1} />
-                    )}
-                </FolderTreeNode>
-            ),
-        )
-    }
+    <FolderTreeNodeTree {...props} />
 </folder-tree-container>
 
 <div id={menuId} class="context-menu" role="menu">

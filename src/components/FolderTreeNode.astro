@@ -1,11 +1,8 @@
 ---
 import { Icon } from "studiocms:ui/components/icon";
-import type { FolderNode } from "../types";
+import type { NodeLeafProps } from "./shared";
 
-interface Props {
-    node: FolderNode;
-    depth?: number;
-}
+interface Props extends NodeLeafProps {}
 
 const { node, depth = 0 } = Astro.props;
 const nodeId = `folder-${node.id}`;
