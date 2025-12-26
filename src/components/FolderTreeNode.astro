@@ -1,0 +1,489 @@
+---
+import { Icon } from "studiocms:ui/components/icon";
+import type { FolderNode } from "../types";
+
+interface Props {
+    node: FolderNode;
+    depth?: number;
+}
+
+const { node, depth = 0 } = Astro.props;
+const nodeId = `folder-${node.id}`;
+const contentId = `content-${node.id}`;
+const href = node.page === false ? `?folder=${node.id}` : "#";
+---
+
+<folder-tree-node
+    data-node-id={nodeId}
+    data-depth={depth}
+    data-href={href}
+    class="tree-node"
+    role="treeitem"
+    aria-expanded="false"
+>
+    <div id={`${nodeId}-tree-node-header`} class="tree-node-header">
+        <button
+            id={`${nodeId}-tree-node-toggle`}
+            class="tree-node-toggle"
+            type="button"
+            aria-controls={contentId}
+            aria-label={`Toggle ${node.name} folder`}
+        >
+            <Icon
+                name="heroicons:chevron-right"
+                class="chevron-icon"
+                width={16}
+                height={16}
+            />
+        </button>
+        <div class="tree-node-content">
+            <Icon
+                name="heroicons:folder"
+                class="folder-icon closed"
+                width={20}
+                height={20}
+            />
+            <Icon
+                name="heroicons:folder-open"
+                class="folder-icon open"
+                width={20}
+                height={20}
+            />
+            <Icon
+                name="heroicons:folder-open-solid"
+                class="folder-icon selected"
+                width={20}
+                height={20}
+            />
+            <span class="tree-node-label">{node.name}</span>
+        </div>
+    </div>
+    <div class="tree-node-children" id={contentId}>
+        <slot />
+    </div>
+    <div id={`${nodeId}-context-menu`} class="context-menu" role="menu">
+        <button class="context-menu-item" role="menuitem" data-action="edit">
+            <Icon name="heroicons:pencil" width={16} height={16} />
+            <span>Edit Folder</span>
+        </button>
+        <button
+            class="context-menu-item"
+            role="menuitem"
+            data-action="copy-link"
+        >
+            <Icon name="heroicons:link" width={16} height={16} />
+            <span>Copy Link</span>
+        </button>
+    </div>
+</folder-tree-node>
+
+<style>
+    .tree-node {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .tree-node-header {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.375rem 0.5rem;
+        border-radius: var(--radius-md);
+        transition: background-color 0.15s ease;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .tree-node-header:hover {
+        background-color: var(--background-step-2);
+    }
+
+    .tree-node-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.125rem;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--text-muted);
+        transition: color 0.15s ease;
+        flex-shrink: 0;
+    }
+
+    .tree-node-toggle:hover {
+        color: var(--text-normal);
+    }
+
+    .tree-node-toggle .chevron-icon {
+        transition: transform 0.2s ease;
+    }
+
+    .tree-node[aria-expanded="true"]
+        > .tree-node-header
+        > .tree-node-toggle
+        .chevron-icon {
+        transform: rotate(90deg);
+    }
+
+    .tree-node-content {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .folder-icon {
+        flex-shrink: 0;
+        color: var(--text-muted);
+        transition: color 0.15s ease;
+    }
+
+    /* Default state: show closed icon */
+    .folder-icon.closed {
+        display: block;
+    }
+
+    .folder-icon.open {
+        display: none;
+    }
+
+    .folder-icon.selected {
+        display: none;
+    }
+
+    /* When expanded: show open icon instead of closed */
+    .tree-node[aria-expanded="true"] > .tree-node-header .folder-icon.closed {
+        display: none;
+    }
+
+    .tree-node[aria-expanded="true"] > .tree-node-header .folder-icon.open {
+        display: block;
+        color: var(--primary-base);
+    }
+
+    /* When active (selected): show selected icon instead of all others */
+    .tree-node[aria-current="page"] > .tree-node-header .folder-icon.closed,
+    .tree-node[aria-current="page"] > .tree-node-header .folder-icon.open {
+        display: none;
+    }
+
+    .tree-node[aria-current="page"] > .tree-node-header .folder-icon.selected {
+        display: block;
+        color: var(--primary-base);
+    }
+
+    .tree-node-label {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        transition: color 0.15s ease;
+    }
+
+    .tree-node-header:hover .tree-node-label {
+        color: var(--text-normal);
+    }
+
+    .tree-node-children {
+        display: none;
+        flex-direction: column;
+        margin-left: 0.75rem;
+        padding-left: 0.75rem;
+        border-left: 1px solid var(--border);
+    }
+
+    .tree-node[aria-expanded="true"] .tree-node-children {
+        display: flex;
+    }
+
+    .tree-node[aria-expanded="false"] .tree-node-children {
+        display: none;
+    }
+
+    .context-menu {
+        display: none;
+        position: fixed;
+        background-color: var(--background-step-1);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        box-shadow: 0 4px 12px var(--shadow);
+        padding: 0.25rem;
+        min-width: 180px;
+        z-index: 1000;
+    }
+
+    .context-menu.active {
+        display: block;
+    }
+
+    .context-menu-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        background: none;
+        border: none;
+        border-radius: var(--radius-sm);
+        color: var(--text-normal);
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+        text-align: left;
+    }
+
+    .context-menu-item:hover {
+        background-color: var(--background-step-2);
+    }
+
+    .context-menu-item:active {
+        background-color: var(--background-step-3);
+    }
+
+    .context-menu-item svg {
+        color: var(--text-muted);
+        flex-shrink: 0;
+    }
+
+    .context-menu-item:hover svg {
+        color: var(--primary-base);
+    }
+</style>
+
+<script>
+    class FolderTreeNode extends HTMLElement {
+        private toggleButton: HTMLButtonElement | null = null;
+        private header: HTMLElement | null = null;
+        private contextMenu: HTMLElement | null = null;
+        private isExpanded = false;
+        private href: string;
+
+        constructor() {
+            super();
+            this.href = this.getAttribute("data-href") || "#";
+        }
+
+        connectedCallback() {
+            const nodeId = this.getAttribute("data-node-id");
+
+            this.toggleButton = this.querySelector(
+                `#${nodeId}-tree-node-toggle`,
+            );
+            this.header = this.querySelector(`#${nodeId}-tree-node-header`);
+            this.contextMenu = this.querySelector(`#${nodeId}-context-menu`);
+            this.setupEventListeners();
+            this.loadExpandedState();
+            this.setupContextMenu();
+            this.setupActiveState();
+        }
+
+        setupEventListeners() {
+            // Toggle on button click
+            this.toggleButton?.addEventListener("click", (e) => {
+                e.stopPropagation();
+                this.toggle();
+            });
+
+            // Toggle on header click (but not the button)
+            this.header?.addEventListener("click", (e) => {
+                if (
+                    e.target !== this.toggleButton &&
+                    !this.toggleButton?.contains(e.target as Node)
+                ) {
+                    this.toggle();
+                }
+            });
+
+            // Keyboard support
+            this.addEventListener("keydown", (e) => {
+                switch (e.key) {
+                    case "Enter":
+                    case " ":
+                        e.preventDefault();
+                        this.toggle();
+                        break;
+                    case "ArrowRight":
+                        if (!this.isExpanded) {
+                            e.preventDefault();
+                            this.expand();
+                        }
+                        break;
+                    case "ArrowLeft":
+                        if (this.isExpanded) {
+                            e.preventDefault();
+                            this.collapse();
+                        }
+                        break;
+                }
+            });
+        }
+
+        setupContextMenu() {
+            // Show context menu on right-click
+            this.header?.addEventListener("contextmenu", (e) => {
+                e.preventDefault();
+                this.showContextMenu(e as MouseEvent);
+            });
+
+            // Hide context menu when clicking outside
+            document.addEventListener("click", (e) => {
+                if (
+                    this.contextMenu &&
+                    !this.contextMenu.contains(e.target as Node)
+                ) {
+                    this.hideContextMenu();
+                }
+            });
+
+            // Handle context menu actions
+            const menuItems =
+                this.contextMenu?.querySelectorAll(".context-menu-item");
+            menuItems?.forEach((item) => {
+                item.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    const action = (item as HTMLElement).getAttribute(
+                        "data-action",
+                    );
+                    this.handleContextMenuAction(action);
+                    this.hideContextMenu();
+                });
+            });
+
+            // Close menu on Escape key
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") {
+                    this.hideContextMenu();
+                }
+            });
+        }
+
+        setupActiveState() {
+            let hrefEdit = null;
+            try {
+                hrefEdit = new URL(
+                    this.getAttribute("data-href") || this.href || "#",
+                    window.location.origin,
+                ).searchParams.get("folder");
+            } catch {}
+            const currentEdit = new URL(window.location.href).searchParams.get(
+                "folder",
+            );
+
+            const isActive =
+                hrefEdit !== null &&
+                currentEdit !== null &&
+                hrefEdit === currentEdit;
+
+            if (isActive) {
+                this.setAttribute("aria-current", "page");
+            } else {
+                this.removeAttribute("aria-current");
+            }
+        }
+
+        showContextMenu(e: MouseEvent) {
+            if (!this.contextMenu) return;
+
+            // Position the menu at cursor
+            this.contextMenu.style.left = `${e.pageX}px`;
+            this.contextMenu.style.top = `${e.pageY}px`;
+            this.contextMenu.classList.add("active");
+
+            // Adjust if menu goes off-screen
+            requestAnimationFrame(() => {
+                if (!this.contextMenu) return;
+                const rect = this.contextMenu.getBoundingClientRect();
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+
+                if (rect.right > viewportWidth) {
+                    this.contextMenu.style.left = `${e.pageX - rect.width}px`;
+                }
+
+                if (rect.bottom > viewportHeight) {
+                    this.contextMenu.style.top = `${e.pageY - rect.height}px`;
+                }
+            });
+        }
+
+        hideContextMenu() {
+            this.contextMenu?.classList.remove("active");
+        }
+
+        handleContextMenuAction(action: string | null) {
+            const href = this.getAttribute("data-href");
+
+            switch (action) {
+                case "edit":
+                    if (href && href !== "#") {
+                        const url = new URL(href, window.location.origin);
+                        window.location.href = url.href;
+                    }
+                    break;
+                case "copy-link":
+                    if (href && href !== "#") {
+                        const fullUrl = new URL(href, window.location.origin)
+                            .href;
+                        navigator.clipboard
+                            .writeText(fullUrl)
+                            .then(() => {
+                                // Optional: Show a toast notification
+                                console.log("Link copied to clipboard!");
+                            })
+                            .catch((err) => {
+                                console.error("Failed to copy link:", err);
+                            });
+                    }
+                    break;
+            }
+        }
+
+        toggle() {
+            if (this.isExpanded) {
+                this.collapse();
+            } else {
+                this.expand();
+            }
+        }
+
+        expand() {
+            this.isExpanded = true;
+            this.setAttribute("aria-expanded", "true");
+            this.saveExpandedState();
+        }
+
+        collapse() {
+            this.isExpanded = false;
+            this.setAttribute("aria-expanded", "false");
+            this.saveExpandedState();
+        }
+
+        saveExpandedState() {
+            const nodeId = this.getAttribute("data-node-id");
+            if (nodeId) {
+                localStorage.setItem(
+                    `tree-node-${nodeId}`,
+                    this.isExpanded.toString(),
+                );
+            }
+        }
+
+        loadExpandedState() {
+            const nodeId = this.getAttribute("data-node-id");
+            if (nodeId) {
+                const saved = localStorage.getItem(`tree-node-${nodeId}`);
+                if (saved === "true") {
+                    this.expand();
+                }
+            }
+        }
+    }
+
+    if (!customElements.get("folder-tree-node")) {
+        customElements.define("folder-tree-node", FolderTreeNode);
+    }
+</script>

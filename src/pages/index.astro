@@ -1,5 +1,8 @@
 ---
-
+import TreeRenderer from "../components_old/TreeRenderer.astro";
+import FolderTreeRenderer from "../components/FolderTreeRenderer.astro";
+import { mockFolderTree } from "../mockData";
+import "../styles/old.css";
 ---
 
 <html lang="en">
@@ -9,8 +12,67 @@
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
 		<title>Astro</title>
+
+		<style>
+			body {
+				font-family: system-ui, sans-serif;
+				line-height: 1.4;
+				margin: 0;
+				padding: 2rem;
+				width: 100vw;
+				height: 100vh;
+				display: flex;
+			}
+
+			.container {
+				display: flex;
+				flex-direction: column;
+				gap: 1rem;
+				width: 100%;
+			}
+
+			.test-box {
+				display: flex;
+				flex-direction: column;
+				width: 300px;
+				min-height: 600px;
+				border: 2px solid var(--border);
+				background-color: var(--background-step-3);
+				transition: background-color 0.3s ease;
+			}
+		</style>
 	</head>
 	<body>
-		<h1>Astro</h1>
+		<div class="container">
+			<h1>Tree Renderer Example</h1>
+			<p>
+				This is a example for the TreeRenderer component using mock
+				data.
+			</p>
+
+			<div style="display: flex; gap: 2rem;">
+				<div class="test-box">
+					<h2
+						style="padding: 1rem; margin: 0; border-bottom: 1px solid var(--border);"
+					>
+						Old Renderer
+					</h2>
+					<div style="padding: 1rem;">
+						<TreeRenderer data={mockFolderTree} />
+					</div>
+				</div>
+
+				<div class="test-box">
+					<h2
+						style="padding: 1rem; margin: 0; border-bottom: 1px solid var(--border);"
+					>
+						New Collapsible Renderer
+					</h2>
+					<div style="padding: 1rem;">
+						<FolderTreeRenderer data={mockFolderTree} />
+					</div>
+				</div>
+			</div>
+		</div>
 	</body>
 </html>

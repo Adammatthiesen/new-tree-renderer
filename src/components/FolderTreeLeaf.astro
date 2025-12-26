@@ -1,0 +1,377 @@
+---
+import { Icon } from "studiocms:ui/components/icon";
+import type { AvailableIcons } from "studiocms:ui/icons";
+import type { FolderNode } from "../types";
+
+interface Props {
+    node: FolderNode;
+    depth?: number;
+}
+
+const { node, depth = 0 } = Astro.props;
+
+/**
+ * Determine the appropriate icon based on page data
+ */
+function getPageIcon(): AvailableIcons {
+    if (!node.pageData) return "heroicons:document-text";
+
+    if (node.pageData.slug === "index") {
+        return "heroicons:home-modern";
+    }
+
+    if (node.pageData.draft) {
+        return "heroicons:pencil";
+    }
+
+    return "heroicons:document-text";
+}
+
+const icon = getPageIcon();
+const activeIcon = `${icon}-solid` as AvailableIcons;
+const href = node.page ? `?edit=${node.id}` : "#";
+---
+
+<folder-tree-leaf
+    data-node-id={node.id}
+    data-depth={depth}
+    data-href={href}
+    class="tree-leaf"
+    role="treeitem"
+    tabindex="0"
+>
+    <Icon name={icon} class="leaf-icon default" width={20} height={20} />
+    <Icon name={activeIcon} class="leaf-icon active" width={20} height={20} />
+    <span class="tree-leaf-label">{node.name}</span>
+    {node.pageData?.draft && <span class="leaf-badge draft-badge">Draft</span>}
+    <div id={`${node.id}-context-menu`} class="context-menu" role="menu">
+        <button class="context-menu-item" role="menuitem" data-action="edit">
+            <Icon name="heroicons:pencil" width={16} height={16} />
+            <span>Edit Page</span>
+        </button>
+        <button
+            class="context-menu-item"
+            role="menuitem"
+            data-action="copy-link"
+        >
+            <Icon name="heroicons:link" width={16} height={16} />
+            <span>Copy Link</span>
+        </button>
+    </div>
+</folder-tree-leaf>
+
+<style>
+    .tree-leaf {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.375rem 0.5rem;
+        padding-left: 1.25rem;
+        border-radius: var(--radius-md);
+        transition:
+            background-color 0.15s ease,
+            color 0.15s ease;
+        cursor: pointer;
+        user-select: none;
+        text-decoration: none;
+        color: var(--text-muted);
+    }
+
+    .tree-leaf:hover {
+        background-color: var(--background-step-2);
+        color: var(--text-normal);
+    }
+
+    .tree-leaf:focus-visible {
+        outline: 2px solid var(--primary-base);
+        outline-offset: -2px;
+    }
+
+    .tree-leaf[aria-current="page"] {
+        background-color: var(--background-step-3);
+        color: var(--text-normal);
+    }
+
+    .leaf-icon {
+        flex-shrink: 0;
+        color: var(--text-muted);
+        transition: color 0.15s ease;
+    }
+
+    .leaf-icon.active {
+        display: none;
+    }
+
+    .tree-leaf:hover .leaf-icon,
+    .tree-leaf[aria-current="page"] .leaf-icon {
+        color: var(--text-normal);
+    }
+
+    .tree-leaf[aria-current="page"] .leaf-icon.default {
+        display: none;
+    }
+
+    .tree-leaf[aria-current="page"] .leaf-icon.active {
+        display: block;
+        color: var(--primary-base);
+    }
+
+    .tree-leaf-label {
+        font-size: 0.875rem;
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .leaf-badge {
+        font-size: 0.625rem;
+        padding: 0.125rem 0.375rem;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+
+    .draft-badge {
+        background-color: var(--warning-flat);
+        color: var(--warning-base);
+    }
+
+    .tree-leaf:hover .draft-badge {
+        background-color: var(--warning-flat-hover);
+    }
+
+    .context-menu {
+        display: none;
+        position: fixed;
+        background-color: var(--background-step-1);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        box-shadow: 0 4px 12px var(--shadow);
+        padding: 0.25rem;
+        min-width: 180px;
+        z-index: 1000;
+    }
+
+    .context-menu.active {
+        display: block;
+    }
+
+    .context-menu-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        background: none;
+        border: none;
+        border-radius: var(--radius-sm);
+        color: var(--text-normal);
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+        text-align: left;
+    }
+
+    .context-menu-item:hover {
+        background-color: var(--background-step-2);
+    }
+
+    .context-menu-item:active {
+        background-color: var(--background-step-3);
+    }
+
+    .context-menu-item svg {
+        color: var(--text-muted);
+        flex-shrink: 0;
+    }
+
+    .context-menu-item:hover svg {
+        color: var(--primary-base);
+    }
+</style>
+
+<script>
+    class FolderTreeLeaf extends HTMLElement {
+        private href: string;
+        private contextMenu: HTMLElement | null = null;
+
+        constructor() {
+            super();
+            this.href = this.getAttribute("data-href") || "#";
+        }
+
+        connectedCallback() {
+            this.setAttribute("role", "link");
+            this.contextMenu = this.querySelector(
+                `#${this.getAttribute("data-node-id")}-context-menu`,
+            );
+            this.setupActiveState();
+            this.setupEventListeners();
+            this.setupContextMenu();
+        }
+
+        setupActiveState() {
+            // Icons live in light DOM (projected via slot)
+            const notSelectedIcon = this.querySelector(".not-selected");
+            const selectedIcon = this.querySelector(".selected");
+
+            let hrefEdit = null;
+            try {
+                hrefEdit = new URL(
+                    this.getAttribute("href") || this.href || "#",
+                    window.location.origin,
+                ).searchParams.get("edit");
+            } catch {}
+            const currentEdit = new URL(window.location.href).searchParams.get(
+                "edit",
+            );
+
+            const isActive =
+                hrefEdit !== null &&
+                currentEdit !== null &&
+                hrefEdit === currentEdit;
+
+            this.classList.toggle("active", !!isActive);
+            if (notSelectedIcon)
+                (notSelectedIcon as HTMLElement).style.display = isActive
+                    ? "none"
+                    : "block";
+            if (selectedIcon)
+                (selectedIcon as HTMLElement).style.display = isActive
+                    ? "block"
+                    : "none";
+            if (isActive) {
+                this.setAttribute("aria-current", "page");
+            } else {
+                this.removeAttribute("aria-current");
+            }
+        }
+
+        setupEventListeners() {
+            this.addEventListener("click", (event) => {
+                const e = event as MouseEvent;
+
+                if (this.href === "#") return;
+
+                const openInNewTab = e.ctrlKey || e.metaKey || e.button === 1;
+
+                e.preventDefault();
+
+                if (openInNewTab) {
+                    window.open(this.href, "_blank");
+                } else {
+                    window.location.href = this.href;
+                }
+            });
+
+            this.addEventListener("keydown", (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    this.click();
+                }
+            });
+        }
+
+        setupContextMenu() {
+            // Show context menu on right-click
+            this.addEventListener("contextmenu", (e) => {
+                e.preventDefault();
+                this.showContextMenu(e as MouseEvent);
+            });
+
+            // Hide context menu when clicking outside
+            document.addEventListener("click", (e) => {
+                if (
+                    this.contextMenu &&
+                    !this.contextMenu.contains(e.target as Node)
+                ) {
+                    this.hideContextMenu();
+                }
+            });
+
+            // Handle context menu actions
+            const menuItems =
+                this.contextMenu?.querySelectorAll(".context-menu-item");
+            menuItems?.forEach((item) => {
+                item.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    const action = (item as HTMLElement).getAttribute(
+                        "data-action",
+                    );
+                    this.handleContextMenuAction(action);
+                    this.hideContextMenu();
+                });
+            });
+
+            // Close menu on Escape key
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") {
+                    this.hideContextMenu();
+                }
+            });
+        }
+
+        showContextMenu(e: MouseEvent) {
+            if (!this.contextMenu) return;
+
+            // Position the menu at cursor
+            this.contextMenu.style.left = `${e.pageX}px`;
+            this.contextMenu.style.top = `${e.pageY}px`;
+            this.contextMenu.classList.add("active");
+
+            // Adjust if menu goes off-screen
+            requestAnimationFrame(() => {
+                if (!this.contextMenu) return;
+                const rect = this.contextMenu.getBoundingClientRect();
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+
+                if (rect.right > viewportWidth) {
+                    this.contextMenu.style.left = `${e.pageX - rect.width}px`;
+                }
+
+                if (rect.bottom > viewportHeight) {
+                    this.contextMenu.style.top = `${e.pageY - rect.height}px`;
+                }
+            });
+        }
+
+        hideContextMenu() {
+            this.contextMenu?.classList.remove("active");
+        }
+
+        handleContextMenuAction(action: string | null) {
+            const href = this.getAttribute("data-href");
+
+            switch (action) {
+                case "edit":
+                    if (href && href !== "#") {
+                        const url = new URL(href, window.location.origin);
+                        window.location.href = url.href;
+                    }
+                    break;
+                case "copy-link":
+                    if (href && href !== "#") {
+                        const fullUrl = new URL(href, window.location.origin)
+                            .href;
+                        navigator.clipboard
+                            .writeText(fullUrl)
+                            .then(() => {
+                                console.log("Link copied to clipboard!");
+                            })
+                            .catch((err) => {
+                                console.error("Failed to copy link:", err);
+                            });
+                    }
+                    break;
+            }
+        }
+    }
+
+    if (!customElements.get("folder-tree-leaf")) {
+        customElements.define("folder-tree-leaf", FolderTreeLeaf);
+    }
+</script>
