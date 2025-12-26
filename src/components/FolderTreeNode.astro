@@ -203,9 +203,9 @@ const href = node.page === false ? `?folder=${node.id}` : "#";
         showContextMenu(e: MouseEvent) {
             if (!this.contextMenu) return;
 
-            // Position the menu at cursor
-            this.contextMenu.style.left = `${e.pageX}px`;
-            this.contextMenu.style.top = `${e.pageY}px`;
+            // Position the menu at cursor (using clientX/clientY for fixed positioning)
+            this.contextMenu.style.left = `${e.clientX}px`;
+            this.contextMenu.style.top = `${e.clientY}px`;
             this.contextMenu.classList.add("active");
 
             // Adjust if menu goes off-screen
@@ -216,7 +216,7 @@ const href = node.page === false ? `?folder=${node.id}` : "#";
                 const viewportHeight = window.innerHeight;
 
                 if (rect.right > viewportWidth) {
-                    this.contextMenu.style.left = `${e.pageX - rect.width}px`;
+                    this.contextMenu.style.left = `${e.clientX - rect.width}px`;
                 }
 
                 if (rect.bottom > viewportHeight) {
