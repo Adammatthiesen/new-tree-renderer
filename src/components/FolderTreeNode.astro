@@ -5,6 +5,7 @@ import type { NodeLeafProps } from "./shared";
 interface Props extends NodeLeafProps {}
 
 const { node, depth = 0 } = Astro.props;
+
 const nodeId = `folder-${node.id}`;
 const contentId = `content-${node.id}`;
 const href = node.page === false ? `?folder=${node.id}` : "#";
