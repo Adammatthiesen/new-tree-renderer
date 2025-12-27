@@ -12,11 +12,6 @@ export interface NodeLeafProps extends BaseProps {
     node: FolderNode;
 }
 
-export interface TreeNodeProps extends NodeLeafProps {
-    createFolderLink: string;
-    createPageLink: string;
-}
-
 export interface TreeProps extends BaseProps {
     data: FolderNode[];
 }
