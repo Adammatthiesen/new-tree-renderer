@@ -50,13 +50,8 @@ export const mockFolderTree: FolderNode[] = [
     {
         id: 'root-1',
         name: 'Getting Started',
-        page: true,
-        pageData: createMockPageData({
-            title: 'Getting Started',
-            slug: 'getting-started',
-            description: 'Learn how to get started with our platform',
-            urlRoute: '/docs/getting-started'
-        }),
+        page: false,
+        pageData: null,
         children: [
             {
                 id: 'child-1-1',
@@ -95,14 +90,8 @@ export const mockFolderTree: FolderNode[] = [
             {
                 id: 'child-2-1',
                 name: 'Authentication',
-                page: true,
-                pageData: createMockPageData({
-                    title: 'Authentication API',
-                    slug: 'authentication',
-                    description: 'API endpoints for authentication',
-                    urlRoute: '/docs/api/authentication',
-                    parentFolder: 'root-2'
-                }),
+                page: false,
+                pageData: null,
                 children: [
                     {
                         id: 'child-2-1-1',
@@ -113,7 +102,8 @@ export const mockFolderTree: FolderNode[] = [
                             slug: 'login',
                             description: 'User login endpoint documentation',
                             urlRoute: '/docs/api/authentication/login',
-                            parentFolder: 'child-2-1'
+                            parentFolder: 'child-2-1',
+                            draft: true
                         }),
                         children: []
                     },
