@@ -1,0 +1,186 @@
+---
+import { Icon } from "studiocms:ui/components/icon";
+import type { TaxonomyNodeProps } from "./shared";
+
+interface Props extends TaxonomyNodeProps {}
+
+const {
+    node,
+    depth = 0,
+    editTagLink = "/",
+    editCategoryLink = "/",
+} = Astro.props;
+
+const href = node.type === "category" ? editCategoryLink : editTagLink;
+const color = (node.meta.color as string) || "var(--primary-500)";
+---
+
+<taxonomy-tree-leaf
+    data-node-id={`taxonomy-${node.type}-${node.id}`}
+    data-taxonomy-id={node.id}
+    data-taxonomy-type={node.type}
+    data-depth={depth}
+    data-href={href}
+    class="tree-leaf"
+    role="treeitem"
+    tabindex="0"
+>
+    {
+        node.type === "category" ? (
+            <Icon
+                name="heroicons:folder"
+                class="leaf-icon"
+                width={20}
+                height={20}
+                style={`color: ${color};`}
+            />
+        ) : (
+            <Icon
+                name="heroicons:tag"
+                class="leaf-icon"
+                width={20}
+                height={20}
+                style={`color: ${color};`}
+            />
+        )
+    }
+    <span class="tree-leaf-label">{node.name}</span>
+</taxonomy-tree-leaf>
+<div
+    id={`taxonomy-${node.type}-${node.id}-context-menu`}
+    class="context-menu"
+    role="menu"
+>
+    <button class="context-menu-item" role="menuitem" data-action="edit">
+        <Icon name="heroicons:pencil" width={16} height={16} />
+        <span>Edit {node.type === "category" ? "Category" : "Tag"}</span>
+    </button>
+</div>
+
+<script>
+    class TaxonomyTreeLeaf extends HTMLElement {
+        private href: string;
+        private contextMenu: HTMLElement | null = null;
+
+        constructor() {
+            super();
+            this.href = this.getAttribute("data-href") || "#";
+        }
+
+        connectedCallback() {
+            this.setAttribute("role", "link");
+            this.contextMenu = document.getElementById(
+                `${this.getAttribute("data-node-id")}-context-menu`,
+            );
+            this.setupEventListeners();
+            this.setupContextMenu();
+        }
+
+        genUrl(base: string, params?: Record<string, string>) {
+            const url = new URL(base, window.location.origin);
+
+            if (params) {
+                for (const [key, value] of Object.entries(params)) {
+                    url.searchParams.set(key, value);
+                }
+            }
+
+            return url.href;
+        }
+
+        setupEventListeners() {
+            this.addEventListener("click", () => {
+                const taxonomyId = this.getAttribute("data-taxonomy-id");
+                window.location.href = `${this.href}?edit=${taxonomyId}`;
+            });
+
+            this.addEventListener("keydown", (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    const taxonomyId = this.getAttribute("data-taxonomy-id");
+                    window.location.href = `${this.href}?edit=${taxonomyId}`;
+                }
+            });
+        }
+
+        setupContextMenu() {
+            // Show context menu on right-click
+            this.addEventListener("contextmenu", (e) => {
+                e.preventDefault();
+                this.showContextMenu(e as MouseEvent);
+            });
+
+            // Hide context menu when clicking outside
+            document.addEventListener("click", (e) => {
+                if (
+                    this.contextMenu &&
+                    !this.contextMenu.contains(e.target as Node)
+                ) {
+                    this.hideContextMenu();
+                }
+            });
+
+            // Handle context menu actions
+            const menuItems =
+                this.contextMenu?.querySelectorAll(".context-menu-item");
+            menuItems?.forEach((item) => {
+                item.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    const action = (item as HTMLElement).getAttribute(
+                        "data-action",
+                    );
+                    this.handleContextMenuAction(action);
+                    this.hideContextMenu();
+                });
+            });
+
+            // Close menu on Escape key
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") {
+                    this.hideContextMenu();
+                }
+            });
+        }
+
+        showContextMenu(e: MouseEvent) {
+            if (!this.contextMenu) return;
+
+            this.contextMenu.style.left = `${e.clientX}px`;
+            this.contextMenu.style.top = `${e.clientY}px`;
+            this.contextMenu.classList.add("active");
+
+            requestAnimationFrame(() => {
+                if (!this.contextMenu) return;
+                const rect = this.contextMenu.getBoundingClientRect();
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+
+                if (rect.right > viewportWidth) {
+                    this.contextMenu.style.left = `${e.clientX - rect.width}px`;
+                }
+
+                if (rect.bottom > viewportHeight) {
+                    this.contextMenu.style.top = `${e.clientY - rect.height}px`;
+                }
+            });
+        }
+
+        hideContextMenu() {
+            this.contextMenu?.classList.remove("active");
+        }
+
+        handleContextMenuAction(action: string | null) {
+            if (!action) return;
+
+            const taxonomyId = this.getAttribute("data-taxonomy-id");
+
+            switch (action) {
+                case "edit":
+                    window.location.href = `${this.href}?edit=${taxonomyId}`;
+                    break;
+            }
+        }
+    }
+
+    customElements.define("taxonomy-tree-leaf", TaxonomyTreeLeaf);
+</script>

@@ -1,0 +1,51 @@
+---
+import TaxonomyTreeRenderer from "../components/taxonomy/TaxonomyTreeRenderer.astro";
+import {
+    categoriesToTaxonomyNodes,
+    tagsToTaxonomyNodes,
+} from "../components/taxonomy/shared";
+import { mockCategories, mockTags } from "../mockData";
+import "../components/folderTree.css";
+
+// Convert mock data to taxonomy nodes
+const categoryNodes = categoriesToTaxonomyNodes(mockCategories);
+const tagNodes = tagsToTaxonomyNodes(mockTags);
+---
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Taxonomy Tree Demo</title>
+    </head>
+    <body>
+        <div style="padding: 2rem; max-width: 1400px; margin: 0 auto;">
+            <h1>Taxonomy Tree Renderer Demo</h1>
+            <p>Showcasing categories and tags using shared tree components</p>
+
+            <div
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem;"
+            >
+                <div style="padding: 1rem;">
+                    <TaxonomyTreeRenderer
+                        title="Categories"
+                        type="category"
+                        data={categoryNodes}
+                        createCategoryLink="/create-category"
+                        editCategoryLink="/edit-category"
+                    />
+                </div>
+
+                <div style="padding: 1rem;">
+                    <TaxonomyTreeRenderer
+                        title="Tags"
+                        type="tag"
+                        data={tagNodes}
+                        editTagLink="/edit-tag"
+                    />
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

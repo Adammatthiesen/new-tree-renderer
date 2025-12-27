@@ -41,3 +41,24 @@ export interface FolderNode {
     pageData: CombinedPageData | null;
     children: FolderNode[];
 }
+
+export type tsPageDataCategoriesSelect = {
+    readonly id: number;
+    readonly name: string;
+    readonly parent: number | null | undefined;
+    readonly description: string;
+    readonly slug: string;
+    readonly meta: {
+        readonly [x: string]: unknown;
+    };
+}
+
+export type tsPageDataTagsSelect = {
+    readonly id: number;
+    readonly name: string;
+    readonly description: string;
+    readonly slug: string;
+    readonly meta: {
+        readonly [x: string]: unknown;
+    };
+}

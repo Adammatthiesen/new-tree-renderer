@@ -1,0 +1,407 @@
+---
+import { Icon } from "studiocms:ui/components/icon";
+import TaxonomyTreeNodeTree from "./TaxonomyTreeNodeTree.astro";
+import type { TaxonomyTreeProps } from "./shared";
+
+interface Props extends TaxonomyTreeProps {
+    title?: string;
+    type: "category" | "tag";
+}
+
+const {
+    title = "Taxonomy",
+    type,
+    createCategoryLink = "/#",
+    editCategoryLink = "/#",
+    editTagLink = "/#",
+    ...props
+} = Astro.props;
+
+const containerId = `taxonomy-tree-${type}-${crypto.randomUUID()}`;
+const menuId = `${containerId}-menu`;
+const containerMenuId = `${containerId}-container-menu`;
+
+const sharedProps = {
+    createCategoryLink,
+    editCategoryLink,
+    editTagLink,
+    ...props,
+};
+---
+
+<taxonomy-tree-container
+    data-type={type}
+    data-create-category-link={createCategoryLink}
+    data-container-id={containerId}
+    data-container-menu-id={containerMenuId}
+    data-menu-id={menuId}
+>
+    {
+        type === "category" && (
+            <div
+                id={containerMenuId}
+                class="taxonomy-tree-container-menu folder-tree-container-menu"
+            >
+                <button
+                    class="container-menu-item"
+                    role="menuitem"
+                    data-action="collapse-all"
+                >
+                    <Icon
+                        name="heroicons:minus-16-solid"
+                        width={12}
+                        height={12}
+                    />
+                    <span>Collapse All</span>
+                </button>
+
+                <button
+                    class="container-menu-item"
+                    role="menuitem"
+                    data-action="expand-all"
+                >
+                    <Icon
+                        name="heroicons:plus-16-solid"
+                        width={12}
+                        height={12}
+                    />
+                    <span>Expand All</span>
+                </button>
+            </div>
+        )
+    }
+
+    <div class="taxonomy-tree-content">
+        <TaxonomyTreeNodeTree {...sharedProps} />
+    </div>
+</taxonomy-tree-container>
+
+<div id={menuId} class="context-menu" role="menu">
+    {
+        type === "category" && (
+            <button
+                class="context-menu-item"
+                role="menuitem"
+                data-action="create-category"
+            >
+                <Icon name="heroicons:folder-plus" width={16} height={16} />
+                <span>Create Category</span>
+            </button>
+        )
+    }
+    {
+        type === "tag" && (
+            <button
+                class="context-menu-item"
+                role="menuitem"
+                data-action="create-tag"
+            >
+                <Icon name="heroicons:tag" width={16} height={16} />
+                <span>Create Tag</span>
+            </button>
+        )
+    }
+    <button
+        class="context-menu-item"
+        role="menuitem"
+        data-action="collapse-all"
+    >
+        <Icon name="heroicons:minus" width={16} height={16} />
+        <span>Collapse All</span>
+    </button>
+    <button class="context-menu-item" role="menuitem" data-action="expand-all">
+        <Icon name="heroicons:plus" width={16} height={16} />
+        <span>Expand All</span>
+    </button>
+</div>
+
+<script>
+    class TaxonomyTreeContainer extends HTMLElement {
+        private contextMenu: HTMLElement | null = null;
+        private containerMenu: HTMLElement | null = null;
+        private menuTrigger: HTMLButtonElement | null = null;
+        private type: "category" | "tag";
+
+        constructor() {
+            super();
+            this.type = this.getAttribute("data-type") as "category" | "tag";
+        }
+
+        connectedCallback() {
+            const menuId = this.getAttribute("data-menu-id");
+            this.contextMenu = document.getElementById(menuId || "");
+            const containerMenuId = this.getAttribute("data-container-menu-id");
+            this.containerMenu = document.getElementById(containerMenuId || "");
+            this.menuTrigger = this.querySelector(
+                '[data-trigger="container-menu"]',
+            );
+
+            this.setupContextMenu();
+            this.setupContainerMenu();
+        }
+
+        setupContextMenu() {
+            // Show context menu on right-click
+            this.addEventListener("contextmenu", (e) => {
+                const target = e.target as HTMLElement;
+
+                // Only show menu if NOT clicking on nodes or leaves
+                if (
+                    target.closest("taxonomy-tree-node") ||
+                    target.closest("taxonomy-tree-leaf")
+                ) {
+                    return;
+                }
+
+                e.preventDefault();
+                this.showContextMenu(e as MouseEvent);
+            });
+
+            // Hide context menu when clicking outside
+            document.addEventListener("click", (e) => {
+                if (
+                    this.contextMenu &&
+                    !this.contextMenu.contains(e.target as Node)
+                ) {
+                    this.hideContextMenu();
+                }
+            });
+
+            // Handle context menu actions
+            const menuItems =
+                this.contextMenu?.querySelectorAll(".context-menu-item");
+            menuItems?.forEach((item) => {
+                item.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    const action = (item as HTMLElement).getAttribute(
+                        "data-action",
+                    );
+                    this.handleContextMenuAction(action);
+                    this.hideContextMenu();
+                });
+            });
+
+            // Close menu on Escape key
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") {
+                    this.hideContextMenu();
+                    this.hideContainerMenu();
+                }
+            });
+        }
+
+        setupContainerMenu() {
+            // Toggle container menu on trigger click
+            this.menuTrigger?.addEventListener("click", (e) => {
+                e.stopPropagation();
+                this.toggleContainerMenu(e as MouseEvent);
+            });
+
+            // Hide container menu when clicking outside
+            document.addEventListener("click", (e) => {
+                if (
+                    this.containerMenu &&
+                    !this.containerMenu.contains(e.target as Node) &&
+                    e.target !== this.menuTrigger
+                ) {
+                    this.hideContainerMenu();
+                }
+            });
+
+            // Handle container menu actions
+            const menuItems = this.containerMenu?.querySelectorAll(
+                ".container-menu-item",
+            );
+            menuItems?.forEach((item) => {
+                item.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    const action = (item as HTMLElement).getAttribute(
+                        "data-action",
+                    );
+                    this.handleContainerMenuAction(action);
+                    this.hideContainerMenu();
+                });
+            });
+        }
+
+        showContextMenu(e: MouseEvent) {
+            if (!this.contextMenu) return;
+
+            this.contextMenu.style.left = `${e.clientX}px`;
+            this.contextMenu.style.top = `${e.clientY}px`;
+            this.contextMenu.classList.add("active");
+
+            requestAnimationFrame(() => {
+                if (!this.contextMenu) return;
+                const rect = this.contextMenu.getBoundingClientRect();
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+
+                if (rect.right > viewportWidth) {
+                    this.contextMenu.style.left = `${e.clientX - rect.width}px`;
+                }
+
+                if (rect.bottom > viewportHeight) {
+                    this.contextMenu.style.top = `${e.clientY - rect.height}px`;
+                }
+            });
+        }
+
+        hideContextMenu() {
+            this.contextMenu?.classList.remove("active");
+        }
+
+        toggleContainerMenu(e: MouseEvent) {
+            if (!this.containerMenu || !this.menuTrigger) return;
+
+            const isActive = this.containerMenu.classList.contains("active");
+
+            if (isActive) {
+                this.hideContainerMenu();
+            } else {
+                // Position menu relative to trigger button
+                const triggerRect = this.menuTrigger.getBoundingClientRect();
+                this.containerMenu.style.left = `${triggerRect.right - 180}px`; // 180px = menu width
+                this.containerMenu.style.top = `${triggerRect.bottom + 4}px`;
+                this.containerMenu.classList.add("active");
+
+                // Adjust if menu goes off-screen
+                requestAnimationFrame(() => {
+                    if (!this.containerMenu) return;
+                    const rect = this.containerMenu.getBoundingClientRect();
+                    const viewportWidth = window.innerWidth;
+                    const viewportHeight = window.innerHeight;
+
+                    if (rect.right > viewportWidth) {
+                        this.containerMenu.style.left = `${viewportWidth - rect.width - 16}px`;
+                    }
+
+                    if (rect.left < 0) {
+                        this.containerMenu.style.left = `16px`;
+                    }
+
+                    if (rect.bottom > viewportHeight) {
+                        this.containerMenu.style.top = `${triggerRect.top - rect.height - 4}px`;
+                    }
+                });
+            }
+        }
+
+        hideContainerMenu() {
+            this.containerMenu?.classList.remove("active");
+        }
+
+        handleSharedActions(action: "collapse-all" | "expand-all") {
+            if (action === "collapse-all") {
+                window.dispatchEvent(new Event("taxonomyTreeNode-collapseAll"));
+            } else if (action === "expand-all") {
+                window.dispatchEvent(new Event("taxonomyTreeNode-expandAll"));
+            }
+        }
+
+        handleContextMenuAction(action: string | null) {
+            if (!action) return;
+
+            switch (action) {
+                case "create-category":
+                case "create-tag":
+                    const createLink = this.getAttribute(
+                        "data-create-category-link",
+                    );
+                    window.location.href = createLink || "/#";
+                    break;
+                case "collapse-all":
+                case "expand-all":
+                    this.handleSharedActions(action);
+                    break;
+            }
+        }
+
+        handleContainerMenuAction(action: string | null) {
+            if (!action) return;
+
+            switch (action) {
+                case "collapse-all":
+                case "expand-all":
+                    this.handleSharedActions(action);
+                    break;
+            }
+        }
+    }
+
+    customElements.define("taxonomy-tree-container", TaxonomyTreeContainer);
+</script>
+
+<style>
+    taxonomy-tree-container {
+        display: block;
+        background: var(--background-step-1);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-4);
+    }
+
+    .taxonomy-tree-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--spacing-4);
+        padding-bottom: var(--spacing-3);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .taxonomy-tree-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-base);
+        margin: 0;
+    }
+
+    .taxonomy-tree-menu-trigger {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: var(--spacing-2);
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+
+        &:hover {
+            background: var(--background-step-2);
+            color: var(--text-base);
+        }
+    }
+
+    .taxonomy-tree-content {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-1);
+    }
+
+    .taxonomy-tree-container-menu {
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        min-width: 180px;
+        padding: 0.5rem;
+        transition: all 0.2s;
+        z-index: 1000;
+    }
+
+    .container-menu-item {
+        align-items: center;
+        gap: var(--spacing-3);
+        padding: var(--spacing-2) var(--spacing-3);
+        border: none;
+        background: transparent;
+        color: var(--text-base);
+        cursor: pointer;
+        border-radius: var(--radius-sm);
+        font-size: 0.875rem;
+        transition: background 0.15s;
+
+        &:hover {
+            background: var(--background-step-2);
+        }
+    }
+</style>
