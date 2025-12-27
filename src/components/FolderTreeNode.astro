@@ -4,17 +4,26 @@ import type { NodeLeafProps } from "./shared";
 
 interface Props extends NodeLeafProps {}
 
-const { node, depth = 0 } = Astro.props;
+const {
+    createFolderLink = "/#",
+    createPageLink = "/#",
+    editFolderLink = "/#",
+    node,
+    depth = 0,
+} = Astro.props;
 
 const nodeId = `folder-${node.id}`;
 const contentId = `content-${node.id}`;
-const href = node.page === false ? `?folder=${node.id}` : "#";
+const href = node.page === false ? editFolderLink : "#";
 ---
 
 <folder-tree-node
     data-node-id={nodeId}
     data-depth={depth}
     data-href={href}
+    data-folder-id={node.id}
+    data-create-subfolder-link={createFolderLink}
+    data-create-page-link={createPageLink}
     class="tree-node"
     role="treeitem"
     aria-expanded="false"
@@ -65,6 +74,22 @@ const href = node.page === false ? `?folder=${node.id}` : "#";
         <button class="context-menu-item" role="menuitem" data-action="edit">
             <Icon name="heroicons:pencil" width={16} height={16} />
             <span>Edit Folder</span>
+        </button>
+        <button
+            class="context-menu-item"
+            role="menuitem"
+            data-action="create-folder"
+        >
+            <Icon name="heroicons:folder-plus" width={16} height={16} />
+            <span>Create Subfolder</span>
+        </button>
+        <button
+            class="context-menu-item"
+            role="menuitem"
+            data-action="create-page"
+        >
+            <Icon name="heroicons:document-plus" width={16} height={16} />
+            <span>Create Subpage</span>
         </button>
     </div>
 </folder-tree-node>
@@ -254,14 +279,44 @@ const href = node.page === false ? `?folder=${node.id}` : "#";
         }
 
         handleContextMenuAction(action: string | null) {
-            const href = this.getAttribute("data-href");
+            const href = this.getAttribute("data-href") || "#";
+            const folderId = this.getAttribute("data-folder-id") || "null";
+
+            const createFolderUrl =
+                this.getAttribute("data-create-subfolder-link") || "#";
+            const createPageUrl =
+                this.getAttribute("data-create-page-link") || "#";
+
+            const genUrl = (base: string, params?: Record<string, string>) => {
+                const url = new URL(base, window.location.origin);
+
+                if (params) {
+                    for (const [key, value] of Object.entries(params)) {
+                        url.searchParams.set(key, value);
+                    }
+                }
+
+                return url.href;
+            };
 
             switch (action) {
                 case "edit":
-                    if (href && href !== "#") {
-                        const url = new URL(href, window.location.origin);
-                        window.location.href = url.href;
-                    }
+                    const editLink = genUrl(href, { folder: folderId });
+                    window.location.href = editLink;
+                    break;
+
+                case "create-folder":
+                    const createFolderLink = genUrl(createFolderUrl, {
+                        folder: folderId,
+                    });
+                    window.location.href = createFolderLink;
+                    break;
+
+                case "create-page":
+                    const createPageLink = genUrl(createPageUrl, {
+                        folder: folderId,
+                    });
+                    window.location.href = createPageLink;
                     break;
             }
         }

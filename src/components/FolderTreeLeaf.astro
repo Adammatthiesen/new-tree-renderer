@@ -5,7 +5,7 @@ import type { NodeLeafProps } from "./shared";
 
 interface Props extends NodeLeafProps {}
 
-const { node, depth = 0 } = Astro.props;
+const { node, depth = 0, editPageLink = "/#" } = Astro.props;
 
 /**
  * Determine the appropriate icon based on page data
@@ -26,11 +26,12 @@ function getPageIcon(): AvailableIcons {
 
 const icon = getPageIcon();
 const activeIcon = `${icon}-solid` as AvailableIcons;
-const href = node.page ? `?edit=${node.id}` : "#";
+const href = node.page ? editPageLink : "#";
 ---
 
 <folder-tree-leaf
     data-node-id={node.id}
+    data-page-id={node.pageData?.id}
     data-depth={depth}
     data-href={href}
     class="tree-leaf"
@@ -200,14 +201,25 @@ const href = node.page ? `?edit=${node.id}` : "#";
         }
 
         handleContextMenuAction(action: string | null) {
-            const href = this.getAttribute("data-href");
+            const href = this.getAttribute("data-href") || "#";
+            const pageId = this.getAttribute("data-page-id") || "";
+
+            const genUrl = (base: string, params?: Record<string, string>) => {
+                const url = new URL(base, window.location.origin);
+
+                if (params) {
+                    for (const [key, value] of Object.entries(params)) {
+                        url.searchParams.set(key, value);
+                    }
+                }
+
+                return url.href;
+            };
 
             switch (action) {
                 case "edit":
-                    if (href && href !== "#") {
-                        const url = new URL(href, window.location.origin);
-                        window.location.href = url.href;
-                    }
+                    const editLink = genUrl(href, { edit: pageId });
+                    window.location.href = editLink;
                     break;
             }
         }

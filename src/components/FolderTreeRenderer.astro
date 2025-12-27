@@ -3,20 +3,31 @@ import { Icon } from "studiocms:ui/components/icon";
 import FolderTreeNodeTree from "./FolderTreeNodeTree.astro";
 import type { TreeProps } from "./shared";
 
-interface Props extends TreeProps {
-    createFolderLink?: string;
-}
+interface Props extends TreeProps {}
 
-const { createFolderLink = "/#", ...props } = Astro.props;
+const {
+    createFolderLink = "/#",
+    createPageLink = "/#",
+    editFolderLink = "/#",
+    ...props
+} = Astro.props;
 
 const containerId = `folder-tree-${crypto.randomUUID()}`;
 const menuId = `${containerId}-menu`;
 
 const containerMenuId = `${containerId}-container-menu`;
+
+const sharedProps = {
+    createFolderLink,
+    createPageLink,
+    editFolderLink,
+    ...props,
+};
 ---
 
 <folder-tree-container
     data-create-folder-link={createFolderLink}
+    data-create-page-link={createPageLink}
     data-container-id={containerId}
     data-container-menu-id={containerMenuId}
     data-menu-id={menuId}
@@ -41,7 +52,7 @@ const containerMenuId = `${containerId}-container-menu`;
         </button>
     </div>
 
-    <FolderTreeNodeTree {...props} />
+    <FolderTreeNodeTree {...sharedProps} />
 </folder-tree-container>
 
 <div id={menuId} class="context-menu" role="menu">
@@ -52,6 +63,10 @@ const containerMenuId = `${containerId}-container-menu`;
     >
         <Icon name="heroicons:folder-plus" width={16} height={16} />
         <span>Create Folder</span>
+    </button>
+    <button class="context-menu-item" role="menuitem" data-action="create-page">
+        <Icon name="heroicons:document-plus" width={16} height={16} />
+        <span>Create Page</span>
     </button>
     <button
         class="context-menu-item"
@@ -204,7 +219,11 @@ const containerMenuId = `${containerId}-container-menu`;
                         this.getAttribute("data-create-folder-link") || "#";
                     window.location.href = createFolderLink;
                     break;
-
+                case "create-page":
+                    const createPageLink =
+                        this.getAttribute("data-create-page-link") || "#";
+                    window.location.href = createPageLink;
+                    break;
                 case "collapse-all":
                 case "expand-all":
                     this.handleSharedActions(action);
