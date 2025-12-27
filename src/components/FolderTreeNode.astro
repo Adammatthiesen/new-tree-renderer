@@ -135,6 +135,20 @@ const href = node.page === false ? `?folder=${node.id}` : "#";
                         break;
                 }
             });
+
+            // Custom window event for mass-collapse
+            window.addEventListener("folderTreeNode-collapseAllFolders", () => {
+                this.collapse();
+            });
+        }
+
+        disconnectedCallback() {
+            window.removeEventListener(
+                "folderTreeNode-collapseAllFolders",
+                () => {
+                    this.collapse();
+                },
+            );
         }
 
         setupContextMenu() {
