@@ -140,6 +140,10 @@ const href = node.page === false ? `?folder=${node.id}` : "#";
             window.addEventListener("folderTreeNode-collapseAllFolders", () => {
                 this.collapse();
             });
+
+            window.addEventListener("folderTreeNode-expandAllFolders", () => {
+                this.expand();
+            });
         }
 
         disconnectedCallback() {
@@ -147,6 +151,12 @@ const href = node.page === false ? `?folder=${node.id}` : "#";
                 "folderTreeNode-collapseAllFolders",
                 () => {
                     this.collapse();
+                },
+            );
+            window.removeEventListener(
+                "folderTreeNode-expandAllFolders",
+                () => {
+                    this.expand();
                 },
             );
         }

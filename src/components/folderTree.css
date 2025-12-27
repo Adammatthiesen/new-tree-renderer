@@ -9,6 +9,48 @@ folder-tree-container {
     position: static;
 }
 
+.folder-tree-container-menu {
+    display: flex;
+    flex-direction: row;
+    gap: 0.25rem;
+    margin-bottom: 0.25rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+}
+
+.folder-tree-container-menu .container-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.25rem;
+    background-color: var(--background-step-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-normal);
+    font-size: 10px;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+        background-color: var(--background-step-3);
+        border-color: var(--primary-base);
+    }
+
+    &:active {
+        background-color: var(--background-step-3);
+    }
+
+    svg {
+        color: var(--text-muted);
+        transition: color 0.15s ease;
+    }
+
+    &:hover svg {
+        color: var(--primary-base);
+    }
+}
+
 /* Custom Elements - ensure no positioning context */
 folder-tree-node,
 folder-tree-leaf {
