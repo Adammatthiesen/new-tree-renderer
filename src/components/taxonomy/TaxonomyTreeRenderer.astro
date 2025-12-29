@@ -4,12 +4,10 @@ import TaxonomyTreeNodeTree from "./TaxonomyTreeNodeTree.astro";
 import type { TaxonomyTreeProps } from "./shared";
 
 interface Props extends TaxonomyTreeProps {
-    title?: string;
     type: "category" | "tag";
 }
 
 const {
-    title = "Taxonomy",
     type,
     createCategoryLink = "/#",
     editCategoryLink = "/#",
@@ -338,40 +336,6 @@ const sharedProps = {
         background: var(--background-step-1);
         border-radius: var(--radius-md);
         padding: var(--spacing-4);
-    }
-
-    .taxonomy-tree-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: var(--spacing-4);
-        padding-bottom: var(--spacing-3);
-        border-bottom: 1px solid var(--border);
-    }
-
-    .taxonomy-tree-title {
-        font-size: 1.125rem;
-        font-weight: 600;
-        color: var(--text-base);
-        margin: 0;
-    }
-
-    .taxonomy-tree-menu-trigger {
-        background: transparent;
-        border: none;
-        color: var(--text-muted);
-        cursor: pointer;
-        padding: var(--spacing-2);
-        border-radius: var(--radius-sm);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s;
-
-        &:hover {
-            background: var(--background-step-2);
-            color: var(--text-base);
-        }
     }
 
     .taxonomy-tree-content {

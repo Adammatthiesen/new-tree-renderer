@@ -29,20 +29,18 @@ const tagNodes = tagsToTaxonomyNodes(mockTags);
             >
                 <div style="padding: 1rem;">
                     <TaxonomyTreeRenderer
-                        title="Categories"
                         type="category"
                         data={categoryNodes}
-                        createCategoryLink="/create-category"
-                        editCategoryLink="/edit-category"
+                        createCategoryLink="/taxonomy-demo"
+                        editCategoryLink="/taxonomy-demo"
                     />
                 </div>
 
                 <div style="padding: 1rem;">
                     <TaxonomyTreeRenderer
-                        title="Tags"
                         type="tag"
                         data={tagNodes}
-                        editTagLink="/edit-tag"
+                        editTagLink="/taxonomy-demo"
                     />
                 </div>
             </div>
